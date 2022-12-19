@@ -27,32 +27,37 @@ intialiseDbAndServer();
 
 app.post("/register", async (request, response) => {
   const { username, name, password, gender, location } = request.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const selectUserQuery = `
-  SELECT 
-    * 
-  FROM 
-    user 
-  WHERE 
-    username = '${username}'`;
-  const dbUser = await db.get(selectUserQuery);
-  if (dbUser === undefined) {
-    const createUserQuery = `
-  INSERT INTO
-    user  (username, name, password, gender, location)
-  VALUES
-    (
-      '${username}',
-      '${name}',
-      '${hashedPassword}',
-      '${gender}',
-      '${location}'  
-    );`;
-    await db.run(createUserQuery);
-    response.send("User Created Successfully");
-  } else {
+  if (`${password.length}` < 5) {
     response.status(400);
-    response.send("Username Already Exits");
+    response.send("Password is too short");
+  } else {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const selectUserQuery = `
+    SELECT 
+        * 
+    FROM 
+        user 
+    WHERE 
+        username = '${username}'`;
+    const dbUser = await db.get(selectUserQuery);
+    if (dbUser === undefined) {
+      const createUserQuery = `
+    INSERT INTO
+        user  (username, name, password, gender, location)
+    VALUES
+        (
+        '${username}',
+        '${name}',
+        '${hashedPassword}',
+        '${gender}',
+        '${location}'  
+        );`;
+      await db.run(createUserQuery);
+      response.send("User Created Successfully");
+    } else {
+      response.status(400);
+      response.send("Username Already Exits");
+    }
   }
 });
 
